@@ -1,0 +1,17 @@
+OBA1 = high > (close[5] + 0.150)                    ? 1 : 0
+OBA2 = close[1] > close[5]                          ? 1 : 0
+OBA3 = close[2] > (low[2] + 0.150)                  ? 1 : 0
+OBA4 = close[3] > close[4]                          ? 1 : 0
+OBA5 = close[4] < close[5]                          ? 1 : 0
+OBA6 = close[5] > close[6]                          ? 1 : 0
+OBA7 = rsi[6] < 50                                  ? 1 : 0
+OBA8 = ta.barssince(ta.crossover(close, lows)) < 10 ? 1 : 0
+OBAT = OBA1 + OBA2 + OBA3 + OBA4 + OBA5 + OBA6 + OBA7 + OBA8
+
+OBAT1 = OBAT == 8
+OBATx1 = low[3]
+OBATx2 = low[3]
+if OBAT == 8
+    line.new(-4, OBATx1, 500, OBATx1, xloc=xloc.bar_index, extend=extend.right, color=#ff0000, style=line.style_solid, width=3)
+plotshape(OBAT1, "OBAT1", shape.cross, location.belowbar, #ff0000, text="OBAT1", textcolor=#ff0000, size=size.tiny)
+
