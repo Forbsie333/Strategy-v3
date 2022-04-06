@@ -86,14 +86,14 @@ BT2 = B2 == 2
 
 
 plotshape(CTTT, "sell", style=shape.triangledown, location=location.abovebar, text="N", color=color.red, size=size.tiny)
-if ct1==3
+if CTT == 2
     alert("Verkoop aan :  (" + str.tostring(close) + ") .", alert.freq_once_per_bar)
     //line.new(bar_index, close, bar_index, close + 1, xloc.bar_index, extend.both, color.red, line.style_dashed, 1)
     label.new(bar_index, na, "" + str.tostring(close, format.mintick) + "", yloc = yloc.belowbar, style = label.style_label_up, color=color.red, textcolor = color.white, size = size.large)
 barcolor(ct1==3 ? color.white : na)
 
 plotshape(ct4, "buy", style=shape.triangleup, location=location.belowbar, text="N", color=color.lime, size=size.tiny)
-if BT2 == 3
+if B2 == 2
     alert("Kopen aan :  (" + str.tostring(close) + ") .", alert.freq_once_per_bar)
     //line.new(bar_index, close, bar_index, close + 1, xloc.bar_index, extend.both, color.green, line.style_dashed, 1 )
     label.new(bar_index, na, "Stoploss\n" + str.tostring(close*0.95, format.mintick) + "", yloc = yloc.abovebar, style = label.style_label_down, color=color.green, textcolor = color.white, size = size.large)
