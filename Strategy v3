@@ -1,17 +1,109 @@
-OBA1 = high > (close[5] + 0.150)                    ? 1 : 0
-OBA2 = close[1] > close[5]                          ? 1 : 0
-OBA3 = close[2] > (low[2] + 0.150)                  ? 1 : 0
-OBA4 = close[3] > close[4]                          ? 1 : 0
-OBA5 = close[4] < close[5]                          ? 1 : 0
-OBA6 = close[5] > close[6]                          ? 1 : 0
-OBA7 = rsi[6] < 50                                  ? 1 : 0
-OBA8 = ta.barssince(ta.crossover(close, lows)) < 10 ? 1 : 0
-OBAT = OBA1 + OBA2 + OBA3 + OBA4 + OBA5 + OBA6 + OBA7 + OBA8
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ryanforbes567
 
-OBAT1 = OBAT == 8
-OBATx1 = low[3]
-OBATx2 = low[3]
-if OBAT == 8
-    line.new(-4, OBATx1, 500, OBATx1, xloc=xloc.bar_index, extend=extend.right, color=#ff0000, style=line.style_solid, width=3)
-plotshape(OBAT1, "OBAT1", shape.cross, location.belowbar, #ff0000, text="OBAT1", textcolor=#ff0000, size=size.tiny)
+//@version=5
+strategy("2H Didier NMACD",
+ overlay=true,
+ default_qty_type=strategy.cash,
+ default_qty_value=100,
+ currency=currency.USD,
+ initial_capital=1000)
+ 
 
+//******variable setup
+//buy variables
+MACD1 = input(-100, "stoch buy low", "stoch must be between 'stoch buy high' and this value for buys, divide the input value by 100") / 100
+MACD2 = input(80, "stoch buy high", "stoch must be between 'stoch buy low' and this value for buys, divide the input value by 100") / 100
+
+
+//sell variables
+MACD3 = input(-45, "stoch sell low", "stoch must be between 'stoch sell high' and this value for sells, divide input the value by 100") / 100
+MACD4 = input(100, "stoch sell high", "stoch must be between 'stoch sell low' and this value for sells, divide the input value by 100") / 100
+
+
+// nmacd
+sma        = input(12, title='Fast MA') //12
+lma        = input(21,title='Slow MA') //21
+tsp        = input(9,title='Trigger') //9
+np         = input(50, title='Normalize')
+h          = input(true, title='Histogram')
+docol      = input(false, title='Color Change')
+dofill     = input(false, title='Fill')
+type       = input.int(1, minval=1, maxval=3, title='1=Ema, 2=Wma, 3=Sma')
+
+ema_1 = ta.ema(close, sma)
+wma_1 = ta.wma(close, sma)
+sma_1 = ta.sma(close, sma)
+
+sh = type == 1 ? ema_1 : type == 2 ? wma_1 : sma_1
+
+ema_2 = ta.ema(close, lma)
+wma_2 = ta.wma(close, lma)
+sma_2 = ta.sma(close, lma)
+
+lon = type == 1 ? ema_2 : type == 2 ? wma_2 : sma_2
+
+ratio = math.min(sh, lon) / math.max(sh, lon)
+Mac = (sh > lon ? 2 - ratio : ratio) - 1
+MacNorm = (Mac - ta.lowest(Mac, np)) / (ta.highest(Mac, np) - ta.lowest(Mac, np) + .000001) * 2 - 1
+MacNorm2 = np < 2 ? Mac : MacNorm
+Trigger = ta.wma(MacNorm2, tsp)
+Hist = MacNorm2 - Trigger
+Hist2 = Hist > 1 ? 1 : Hist < -1 ? -1 : Hist
+swap = Hist2 > Hist2[1] ? color.green : color.red
+swap2 = docol ? MacNorm2 > MacNorm2[1] ? #0094FF : #FF006E : color.green
+//plot(h ? Hist2 : na, color=swap, style=plot.style_columns, title='Hist', histbase=0)
+//plot(MacNorm2, color=swap2, title='MacNorm')
+//plot(dofill ? MacNorm2 : na, color=MacNorm2 > 0 ? color.green : color.red, style=plot.style_columns)
+//plot(Trigger, color=color.new(color.red, 0), title='Trigger')
+//hline(0)
+
+
+c1  = ta.crossunder(MacNorm2, Trigger)      ? 1 : 0
+c2  = MacNorm2 > MACD3 and MacNorm2 < MACD4 ? 1 : 0
+c3  = Hist2 < 0.00                          ? 1 : 0
+ct1 = c1 + c2 + c3
+ct2 = ct1==3
+
+c4  = ta.crossover(MacNorm2, Trigger)       ? 1 : 0
+c5  = MacNorm2 > MACD1 and MacNorm2 < MACD2 ? 1 : 0
+c6  = Hist2 > 0.00                          ? 1 : 0
+ct3 = c4 + c5 + c6
+ct4 = ct3 == 3
+
+// Ryan added these two blocks of conditions below
+// SELLS below
+C10 = ta.barssince(ct1==3) == 1                    ? 1 : 0
+C11 = ta.barssince(ct2[1]) > ta.barssince(ct3==3)  ? 1 : 0
+CTT = C10 + C11
+CTTT = CTT == 2
+
+// BUYS below
+C20 = ta.barssince(ct3==3) == 1                    ? 1 : 0
+C21 = ta.barssince(ct4[1]) > ta.barssince(ct1==3)  ? 1 : 0
+B2 = C20 + C21
+BT2 = B2 == 2
+
+
+plotshape(CTTT, "sell", style=shape.triangledown, location=location.abovebar, text="N", color=color.red, size=size.tiny)
+if ct1==3
+    alert("Verkoop aan :  (" + str.tostring(close) + ") .", alert.freq_once_per_bar)
+    //line.new(bar_index, close, bar_index, close + 1, xloc.bar_index, extend.both, color.red, line.style_dashed, 1)
+    label.new(bar_index, na, "" + str.tostring(close, format.mintick) + "", yloc = yloc.belowbar, style = label.style_label_up, color=color.red, textcolor = color.white, size = size.large)
+barcolor(ct1==3 ? color.white : na)
+
+plotshape(ct4, "buy", style=shape.triangleup, location=location.belowbar, text="N", color=color.lime, size=size.tiny)
+if BT2 == 3
+    alert("Kopen aan :  (" + str.tostring(close) + ") .", alert.freq_once_per_bar)
+    //line.new(bar_index, close, bar_index, close + 1, xloc.bar_index, extend.both, color.green, line.style_dashed, 1 )
+    label.new(bar_index, na, "Stoploss\n" + str.tostring(close*0.95, format.mintick) + "", yloc = yloc.abovebar, style = label.style_label_down, color=color.green, textcolor = color.white, size = size.large)
+barcolor(ct3 == 3 ? color.white : na)
+
+ma1 = input.int(250, "1")
+ma2 = input.int(50, "2")
+MA1 = ta.ema(close, ma1)
+MA2 = ta.ema(close, ma2)
+
+
+plot(MA1, color=#FF3333, linewidth=2)
+plot(MA2, color=#68FF33, linewidth=2)
