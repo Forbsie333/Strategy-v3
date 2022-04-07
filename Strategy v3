@@ -72,32 +72,38 @@ ct3 = c4 + c5 + c6
 ct4 = ct3 == 3
 
 // Ryan added these two blocks of conditions below
-// SELLS below
-C10 = ta.barssince(ct1==3) == 1                    ? 1 : 0
-C11 = ta.barssince(ct2[1]) > ta.barssince(ct3==3)  ? 1 : 0
-CTT = C10 + C11
-CTTT = CTT == 2
 
 // BUYS below
-C20 = ta.barssince(ct3==3) == 1                    ? 1 : 0
-C21 = ta.barssince(ct4[1]) > ta.barssince(ct1==3)  ? 1 : 0
+cba = 0 
+if ta.barssince(ct4) > ta.barssince(ct2)
+    cba := 1
+C10 = ta.barssince(cba == 1) == 2 ? 1 : 0
+C11 = ta.barssince(ct3 == 3) == 1 ? 1 : 0
+CTT = C10 + C11
+CC = CTT == 2
+
+//SELLS below
+abc = 0
+if ta.barssince(ct2) > ta.barssince(ct4)
+    abc := 1
+C20 = ta.barssince(abc == 1) == 2 ? 1 : 0
+C21 = ta.barssince(ct1 == 3) == 1 ? 1 : 0
 B2 = C20 + C21
-BT2 = B2 == 2
+BB = B2 == 2
 
-
-plotshape(CTTT, "sell", style=shape.triangledown, location=location.abovebar, text="N", color=color.red, size=size.tiny)
+plotshape(CC, "sell", style=shape.triangledown, location=location.abovebar, text="N", color=color.red, size=size.tiny)
 if CTT == 2
     alert("Verkoop aan :  (" + str.tostring(close) + ") .", alert.freq_once_per_bar)
     //line.new(bar_index, close, bar_index, close + 1, xloc.bar_index, extend.both, color.red, line.style_dashed, 1)
     label.new(bar_index, na, "" + str.tostring(close, format.mintick) + "", yloc = yloc.belowbar, style = label.style_label_up, color=color.red, textcolor = color.white, size = size.large)
-barcolor(ct1==3 ? color.white : na)
+barcolor(CTT == 2 ? color.white : na)
 
-plotshape(ct4, "buy", style=shape.triangleup, location=location.belowbar, text="N", color=color.lime, size=size.tiny)
+plotshape(BB, "buy", style=shape.triangleup, location=location.belowbar, text="N", color=color.lime, size=size.tiny)
 if B2 == 2
     alert("Kopen aan :  (" + str.tostring(close) + ") .", alert.freq_once_per_bar)
     //line.new(bar_index, close, bar_index, close + 1, xloc.bar_index, extend.both, color.green, line.style_dashed, 1 )
     label.new(bar_index, na, "Stoploss\n" + str.tostring(close*0.95, format.mintick) + "", yloc = yloc.abovebar, style = label.style_label_down, color=color.green, textcolor = color.white, size = size.large)
-barcolor(ct3 == 3 ? color.white : na)
+barcolor(B2 == 2 ? color.white : na)
 
 ma1 = input.int(250, "1")
 ma2 = input.int(50, "2")
